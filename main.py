@@ -5,9 +5,18 @@ import time
 import pygame
 
 pygame.init()
-pygame.display.set_caption('Игра')
-size = WIDTH, HEIGHT = 920, 580
+with open(os.path.join('data', 'settings.txt')) as file:
+    for row in file:
+        if (s:=row.split())[0] == 'WIDTH':
+            WIDTH = int(s[1])
+        elif s[0] == 'HEIGHT':
+            HEIGHT = int(s[1])
+        elif s[0] == 'volume':
+            volume = float(s[1])
+size = WIDTH, HEIGHT
 screen = pygame.display.set_mode(size)
+pygame.mixer.music.set_volume(volume)
+pygame.mixer.music.load('data/Menu.mp3')
 t = time.time()
 
 
@@ -38,6 +47,10 @@ class Mouse(pygame.sprite.Sprite):
         self.rect.x = 0
         self.rect.y = 0
 
+    def update_sprite(self):
+        self.image = Mouse.image
+        self.rect = self.image.get_rect()
+
 
 class Background(pygame.sprite.Sprite):
     image1 = pygame.transform.scale(load_image('menu4.png'), (WIDTH, HEIGHT))
@@ -47,141 +60,240 @@ class Background(pygame.sprite.Sprite):
         super().__init__(group)
         self.image = Background.image1
         self.rect = self.image.get_rect()
+        self.scane = 'menu'
 
     def update(self):
         global t
-        if (time.time() - t) % 4 > 1:
+        if (time.time() - t) % 2 > 1:
             self.image = Background.image2
-        elif (time.time() - t) % 4 > 2:
-            pass
-        elif (time.time() - t) % 4 > 3:
-            pass
         else:
             self.image = Background.image1
 
+    def update_sprite(self):
+        Background.image1 = pygame.transform.scale(load_image('menu4.png'), (WIDTH, HEIGHT))
+        Background.image2 = pygame.transform.scale(load_image('menu4_1.png'), (WIDTH, HEIGHT))
+        self.image = Background.image1
+        self.rect = self.image.get_rect()
+
 
 class StartButton(pygame.sprite.Sprite):
-    image1 = pygame.transform.scale(load_image('start1.png'), (WIDTH * 0.33, HEIGHT * 0.125))
-    image2 = pygame.transform.scale(load_image('start2.png'), (WIDTH * 0.33, HEIGHT * 0.125))
+    image1 = pygame.transform.scale(load_image('start1.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+    image2 = pygame.transform.scale(load_image('start2.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
 
-    def __init__(self, group, a=0):
+    def __init__(self, group):
         super().__init__(group)
-        if a == 0:
-            self.image = StartButton.image1
-        elif a == 1:
-            self.image = StartButton.image2
+        self.image = StartButton.image1
         self.rect = self.image.get_rect()
         self.rect.x = WIDTH * 0.33
         self.rect.y = HEIGHT * 0.25
         self.button = pygame.Rect(self.rect)
 
-    def startgame(self):
-        for i in fon_sprites:
-            fon_sprites.remove(i)
-
     def mousedown(self):
-        if self.button.collidepoint(mouse_pos) and self in fon_sprites:
+        if self.button.collidepoint(mouse_pos) and background.scane == 'menu':
             self.image = StartButton.image2
 
     def mouseup(self):
-        if not self.button.collidepoint(mouse_pos) and self in fon_sprites:
+        if not self.button.collidepoint(mouse_pos) and background.scane == 'menu':
             self.image = StartButton.image1
-        else:
+        elif background.scane == 'menu':
             self.startgame()
+
+    def startgame(self):
+        background.scane = 'game'
+
+    def update_sprite(self):
+        StartButton.image1 = pygame.transform.scale(load_image('start1.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+        StartButton.image2 = pygame.transform.scale(load_image('start2.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+        self.image = StartButton.image1
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH * 0.33
+        self.rect.y = HEIGHT * 0.25
+        self.button = pygame.Rect(self.rect)
 
 
 class StatisticsButton(pygame.sprite.Sprite):
-    image1 = pygame.transform.scale(load_image('statistics1.png'), (WIDTH * 0.33, HEIGHT * 0.125))
-    image2 = pygame.transform.scale(load_image('statistics2.png'), (WIDTH * 0.33, HEIGHT * 0.125))
+    image1 = pygame.transform.scale(load_image('statistics1.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+    image2 = pygame.transform.scale(load_image('statistics2.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
 
-    def __init__(self, group, a=0):
+    def __init__(self, group):
         super().__init__(group)
-        if a == 0:
-            self.image = StatisticsButton.image1
-        elif a == 1:
-            self.image = StatisticsButton.image2
+        self.image = StatisticsButton.image1
         self.rect = self.image.get_rect()
         self.rect.x = WIDTH * 0.33
         self.rect.y = HEIGHT * 0.4
         self.button = pygame.Rect(self.rect)
 
     def mousedown(self):
-        if self.button.collidepoint(mouse_pos) and self in fon_sprites:
+        if self.button.collidepoint(mouse_pos) and background.scane == 'menu':
             self.image = StatisticsButton.image2
 
     def mouseup(self):
-        if not self.button.collidepoint(mouse_pos) and self in fon_sprites:
+        if not self.button.collidepoint(mouse_pos) and background.scane == 'menu':
             self.image = StatisticsButton.image1
-        elif self in fon_sprites:
-            pass
+        elif background.scane == 'menu':
+            background.scane = 'statistics'
+
+    def update_sprite(self):
+        StatisticsButton.image1 = pygame.transform.scale(load_image('statistics1.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+        StatisticsButton.image2 = pygame.transform.scale(load_image('statistics2.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+        self.image = StatisticsButton.image1
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH * 0.33
+        self.rect.y = HEIGHT * 0.4
+        self.button = pygame.Rect(self.rect)
 
 
 class SettingsButton(pygame.sprite.Sprite):
-    image1 = pygame.transform.scale(load_image('settings1.png'), (WIDTH * 0.33, HEIGHT * 0.125))
-    image2 = pygame.transform.scale(load_image('settings2.png'), (WIDTH * 0.33, HEIGHT * 0.125))
+    image1 = pygame.transform.scale(load_image('settings1.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+    image2 = pygame.transform.scale(load_image('settings2.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
 
-    def __init__(self, group, a=0):
+    def __init__(self, group):
         super().__init__(group)
-        if a == 0:
-            self.image = SettingsButton.image1
-        elif a == 1:
-            self.image = SettingsButton.image2
+        self.image = SettingsButton.image1
         self.rect = self.image.get_rect()
         self.rect.x = WIDTH * 0.33
         self.rect.y = HEIGHT * 0.55
         self.button = pygame.Rect(self.rect)
 
     def mousedown(self):
-        if self.button.collidepoint(mouse_pos) and self in fon_sprites:
+        if self.button.collidepoint(mouse_pos) and background.scane == 'menu':
             self.image = SettingsButton.image2
 
     def mouseup(self):
-        if not self.button.collidepoint(mouse_pos) and self in fon_sprites:
+        if not self.button.collidepoint(mouse_pos) and background.scane == 'menu':
             self.image = SettingsButton.image1
-        elif self in fon_sprites:
-            pass
+        elif background.scane == 'menu':
+            background.scane = 'settings'
+
+    def update_sprite(self):
+        SettingsButton.image1 = pygame.transform.scale(load_image('settings1.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+        SettingsButton.image2 = pygame.transform.scale(load_image('settings2.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+        self.image = SettingsButton.image1
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH * 0.33
+        self.rect.y = HEIGHT * 0.55
+        self.button = pygame.Rect(self.rect)
 
 
 class QuitButton(pygame.sprite.Sprite):
-    image1 = pygame.transform.scale(load_image('quit1.png'), (WIDTH * 0.33, HEIGHT * 0.125))
-    image2 = pygame.transform.scale(load_image('quit2.png'), (WIDTH * 0.33, HEIGHT * 0.125))
+    image1 = pygame.transform.scale(load_image('quit1.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+    image2 = pygame.transform.scale(load_image('quit2.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
 
-    def __init__(self, group, a=0):
+    def __init__(self, group):
         super().__init__(group)
-        if a == 0:
-            self.image = QuitButton.image1
-        elif a == 1:
-            self.image = QuitButton.image2
+        self.image = QuitButton.image1
         self.rect = self.image.get_rect()
         self.rect.x = WIDTH * 0.33
         self.rect.y = HEIGHT * 0.7
         self.button = pygame.Rect(self.rect)
 
     def mousedown(self):
-        if self.button.collidepoint(mouse_pos) and self in fon_sprites:
+        if self.button.collidepoint(mouse_pos) and background.scane == 'menu':
             self.image = QuitButton.image2
 
     def mouseup(self):
-        if not self.button.collidepoint(mouse_pos) and self in fon_sprites:
+        if not self.button.collidepoint(mouse_pos) and background.scane == 'menu':
             self.image = QuitButton.image1
-        elif self in fon_sprites:
+        elif background.scane == 'menu':
             return False
         return True
 
+    def update_sprite(self):
+        QuitButton.image1 = pygame.transform.scale(load_image('quit1.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+        QuitButton.image2 = pygame.transform.scale(load_image('quit2.png'), (int(WIDTH * 0.33), int(HEIGHT * 0.125)))
+        self.image = QuitButton.image1
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH * 0.33
+        self.rect.y = HEIGHT * 0.7
+        self.button = pygame.Rect(self.rect)
+
+
+class CloseButton(pygame.sprite.Sprite):
+    image = pygame.transform.scale(load_image('close.png'), (int(WIDTH * 0.1), int(HEIGHT * 0.04)))
+
+    def __init__(self, group):
+        super().__init__(group)
+        self.image = CloseButton.image
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH * 0.69
+        self.rect.y = HEIGHT * 0.915
+        self.button = pygame.Rect(self.rect)
+
+    def mouseup(self):
+        if self.button.collidepoint(mouse_pos) and background.scane == 'settings':
+            background.scane = 'menu'
+
+    def update_sprite(self):
+        CloseButton.image = pygame.transform.scale(load_image('close.png'), (int(WIDTH * 0.1), int(HEIGHT * 0.04)))
+        self.image = CloseButton.image
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH * 0.69
+        self.rect.y = HEIGHT * 0.915
+        self.button = pygame.Rect(self.rect)
+
+
+class ApplyButton(pygame.sprite.Sprite):
+    image = pygame.transform.scale(load_image('apply.png'), (int(WIDTH * 0.1), int(HEIGHT * 0.04)))
+
+    def __init__(self, group):
+        super().__init__(group)
+        self.image = ApplyButton.image
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH * 0.8
+        self.rect.y = HEIGHT * 0.915
+        self.button = pygame.Rect(self.rect)
+
+    def mouseup(self):
+        if self.button.collidepoint(mouse_pos) and background.scane == 'settings':
+            background.scane = 'menu'
+            global screen, WIDTH, HEIGHT
+            WIDTH = 520
+            HEIGHT = 720
+            screen = pygame.display.set_mode((WIDTH, HEIGHT))
+            update_all_sprites()
+
+    def update_sprite(self):
+        ApplyButton.image = pygame.transform.scale(load_image('apply.png'), (int(WIDTH * 0.1), int(HEIGHT * 0.04)))
+        self.image = ApplyButton.image
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH * 0.8
+        self.rect.y = HEIGHT * 0.915
+        self.button = pygame.Rect(self.rect)
+
+
+def update_all_sprites():
+    background.update_sprite()
+    mouse.update_sprite()
+    start.update_sprite()
+    statisticsmenu.update_sprite()
+    settings.update_sprite()
+    quit.update_sprite()
+    apply.update_sprite()
+    close.update_sprite()
+
 
 if __name__ == '__main__':
-    fon_sprites = pygame.sprite.Group()
+    background_sprite = pygame.sprite.Group()
+    menu_sprites = pygame.sprite.Group()
+    settings_sprites = pygame.sprite.Group()
+    game_sprites = pygame.sprite.Group()
     mouse_sprite = pygame.sprite.Group()
-    background = Background(fon_sprites)
+    background = Background(background_sprite)
     mouse = Mouse(mouse_sprite)
-    start = StartButton(fon_sprites)
-    statisticsmenu = StatisticsButton(fon_sprites)
-    settings = SettingsButton(fon_sprites)
-    quit = QuitButton(fon_sprites)
+    start = StartButton(menu_sprites)
+    statisticsmenu = StatisticsButton(menu_sprites)
+    settings = SettingsButton(menu_sprites)
+    quit = QuitButton(menu_sprites)
+    apply = ApplyButton(settings_sprites)
+    close = CloseButton(settings_sprites)
     pygame.mouse.set_visible(False)
+    pygame.mixer.music.play(-1)
+    clock = pygame.time.Clock()
     running = True
     while running:
         screen.fill('black')
+        clock.tick()
+        pygame.display.set_caption(str(int(clock.get_fps())))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -199,8 +311,18 @@ if __name__ == '__main__':
                 settings.mouseup()
                 statisticsmenu.mouseup()
                 running = quit.mouseup()
-        fon_sprites.draw(screen)
-        fon_sprites.update()
+                close.mouseup()
+                apply.mouseup()
+        background_sprite.draw(screen)
+        background_sprite.update()
+
+        if background.scane == 'menu':
+            menu_sprites.draw(screen)
+            menu_sprites.update()
+        elif background.scane == 'settings':
+            settings_sprites.draw(screen)
+            settings_sprites.update()
+
         if pygame.mouse.get_focused():
             mouse_sprite.draw(screen)
             mouse_sprite.update()
